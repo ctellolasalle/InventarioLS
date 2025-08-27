@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalleInventory - Instituto La Salle Florida</title>
+    
+    <!-- Meta tags -->
+    <meta name="description" content="Sistema de inventario de aulas - Instituto La Salle Florida">
+    <meta name="author" content="Instituto La Salle Florida">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SalleInventory">
+</head>
+<body>
+    <!-- PANTALLA DE LOGIN -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-form">
+            <div class="login-header">
+                <div class="logo">📚</div>
+                <h1>SalleInventory</h1>
+                <p>Instituto La Salle Florida</p>
+                <p class="subtitle">Sistema de Inventario de Aulas</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Correo Electronico</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="usuario@lasalle.edu.ar" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-icon">🔐</span> Iniciar Sesion
+                </button>
+                
+                <div id="loginError" class="alert alert-danger hidden"></div>
+                
+                <div class="login-help">
+                    <p>Usuarios por defecto:</p>
+                    <ul>
+                        <li>admin@escuela.edu / 123456</li>
+                        <li>ti@escuela.edu / 123456</li>
+                        <li>mantenimiento@escuela.edu / 123456</li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APLICACION PRINCIPAL -->
+    <div id="mainApp" class="container hidden">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-main">📚</div>
+                <div class="header-text">
+                    <h1>SalleInventory</h1>
+                    <p>Instituto La Salle Florida</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div id="userInfo" class="user-info">
+                    <div class="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+                <button id="logoutBtn" class="btn-logout">
+                    <span>🔓</span> Cerrar Sesion
+                </button>
+            </div>
+        </div>
+
+        <!-- NAVEGACION -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="registro">
+                <span class="tab-icon">📝</span>
+                <span class="tab-text">Registro</span>
+            </button>
+            <button class="nav-tab" data-tab="inventario">
+                <span class="tab-icon">📋</span>
+                <span class="tab-text">Inventario</span>
+            </button>
+            <button class="nav-tab" data-tab="reportes" data-requires-view="reportes">
+                <span class="tab-icon">📊</span>
+                <span class="tab-text">Reportes</span>
+            </button>
+            <button class="nav-tab hidden" id="adminTab" data-tab="admin" data-requires-admin="true">
+                <span class="tab-icon">⚙️</span>
+                <span class="tab-text">Administracion</span>
+            </button>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="content">
+            <!-- TAB: REGISTRO DE INVENTARIO -->
+            <section id="registro" class="tab-content active">
+                <div class="page-header">
+                    <h2>📝 Registro de Inventario</h2>
+                    <p>Registra el estado actual del equipamiento por aula</p>
+                </div>
+
+                <div class="aula-selector">
+                    <h3>
+                        <span class="section-icon">🏛️</span>
+                        Seleccionar Aula
+                    </h3>
+                    <div class="form-group">
+                        <select id="aulaSelect" class="form-control" required>
+                            <option value="">-- Selecciona un aula --</option>
+                        </select>
+                    </div>
+                    <div class="aula-actions">
+                        <button id="loadInventoryBtn" class="btn btn-outline" disabled>
+                            <span class="btn-icon">📋</span> Cargar Inventario Actual
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="app.clearInventoryForm()">
+                            <span class="btn-icon">🗑️</span> Limpiar Formulario
+                        </button>
+                    </div>
+                </div>
+
+                <form id="inventoryForm">
+                    <div id="inventoryContainer" class="inventory-grid">
+                        <!-- Los items de inventario se cargan dinamicamente -->
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Cargando categorias...</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="observacionesGenerales">
+                            <span class="field-icon">📝</span>
+                            Observaciones Generales del Aula
+                        </label>
+                        <textarea id="observacionesGenerales" class="form-control" rows="3" 
+                            placeholder="Comentarios adicionales sobre el estado general del aula, problemas detectados, recomendaciones..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <span class="btn-icon">💾</span> Guardar Inventario
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- TAB: CONSULTA DE INVENTARIO -->
+            <section id="inventario" class="tab-content">
+                <div class="page-header">
+                    <h2>📋 Estado del Inventario</h2>
+                    <p>Consulta el estado actual del equipamiento</p>
+                </div>
+
+                <div class="stats-grid" id="statsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Cargando estadisticas...</p>
+                    </div>
+                </div>
+
+                <div id="aulasInventario">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Cargando inventario de aulas...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: REPORTES -->
+            <section id="reportes" class="tab-content">
+                <div class="page-header">
+                    <h2>📊 Reportes y Estadisticas</h2>
+                    <p>Genera reportes detallados del estado del inventario</p>
+                </div>
+
+                <div class="stats-grid" id="reporteStats">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Cargando estadisticas...</p>
+                    </div>
+                </div>
+
+                <div class="report-actions">
+                    <h3>Reportes Disponibles</h3>
+                    <div class="button-grid">
+                        <button class="btn btn-outline" onclick="generarReporte('resumen')">
+                            <span class="btn-icon">📋</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Resumen General</div>
+                                <div class="btn-desc">Estadisticas globales del inventario</div>
+                            </div>
+                        </button>
+                        
+                        <button class="btn btn-outline" onclick="generarReporte('criticos')">
+                            <span class="btn-icon">🚨</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Items Criticos</div>
+                                <div class="btn-desc">Equipos que requieren atencion</div>
+                            </div>
+                        </button>
+                        
+                        <button class="btn btn-outline" onclick="generarReporte('aulas')">
+                            <span class="btn-icon">🏛️</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Por Aulas</div>
+                                <div class="btn-desc">Estado detallado por aula</div>
+                            </div>
+                        </button>
+                        
+                        <button class="btn btn-outline" onclick="exportarExcel()" data-requires-admin="true">
+                            <span class="btn-icon">📊</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Exportar Excel</div>
+                                <div class="btn-desc">Descargar datos completos</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="reporteContainer">
+                    <!-- Los reportes se muestran aqui -->
+                </div>
+            </section>
+
+            <!-- TAB: ADMINISTRACION -->
+            <section id="admin" class="tab-content">
+                <div class="page-header">
+                    <h2>⚙️ Panel de Administracion</h2>
+                    <p>Gestion de usuarios, aulas y configuraciones del sistema</p>
+                </div>
+
+                <div class="admin-actions">
+                    <div class="button-grid">
+                        <button class="btn btn-outline" onclick="app.loadAdminTab()">
+                            <span class="btn-icon">👥</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Gestionar Usuarios</div>
+                                <div class="btn-desc">Crear, editar y administrar usuarios</div>
+                            </div>
+                        </button>
+                        
+                        <button class="btn btn-outline" onclick="app.showCreateAulaModal()">
+                            <span class="btn-icon">🏛️</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Gestionar Aulas</div>
+                                <div class="btn-desc">Crear y administrar aulas</div>
+                            </div>
+                        </button>
+                        
+                        <button class="btn btn-outline" onclick="app.showConfigModal()">
+                            <span class="btn-icon">🔧</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Configuracion</div>
+                                <div class="btn-desc">Parametros del sistema</div>
+                            </div>
+                        </button>
+                        
+                        <button class="btn btn-outline" onclick="app.showBackupModal()">
+                            <span class="btn-icon">💾</span>
+                            <div class="btn-content">
+                                <div class="btn-title">Respaldo</div>
+                                <div class="btn-desc">Exportar y respaldar datos</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="adminContainer">
+                    <!-- El contenido de administracion se carga aqui -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL UNIVERSAL -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title"></h3>
+                <button class="modal-close" onclick="app.closeModal()">×</button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/apifront.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Service Worker para PWA (opcional) -->
+    <script>
+        // Registrar service worker si esta disponible
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('Service Worker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error registrando Service Worker:', error);
+                    });
+            });
+        }
+
+        // Detectar si la app puede instalarse como PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Mostrar boton de instalacion (opcional)
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+            }
+        });
+
+        // Funcion para instalar PWA
+        window.installPWA = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('Resultado instalacion PWA:', outcome);
+                deferredPrompt = null;
+            }
+        };
+    </script>
+</body>
+</html>
